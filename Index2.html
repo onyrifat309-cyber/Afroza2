@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Do You Love Me?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+  :root{
+    --pink: #ff5d8f;
+    --pink-deep: #ff2e63;
+    --pink-soft: #ffb3c6;
+    --bg-1: #0b0710;
+    --bg-2: #150a1f;
+    --gray: #2b2b33;
+    --gray-light: #3d3d47;
+    --text: #f5f1f7;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{
+    height:100%;
+    width:100%;
+    overflow-x:hidden;
+    background:var(--bg-1);
+    color:var(--text);
+    font-family:'Poppins', sans-serif;
+  }
+
+  body{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ---------- Ambient background ---------- */
+  #bg-canvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,93,143,0.10), transparent 60%),
+      radial-gradient(circle at 80% 70%, rgba(255,46,99,0.10), transparent 60%),
+      linear-gradient(160deg, var(--bg-1), var(--bg-2));
+  }
+
+  .glow-dot{
+    position:fixed;
+    border-radius:50%;
+    filter:blur(2px);
+    pointer-events:none;
+    z-index:1;
+    opacity:0.55;
+    animation:float-dot linear infinite;
+  }
+
+  @keyframes float-dot{
+    0%{ transform:translateY(0) translateX(0); }
+    50%{ transform:translateY(-30px) translateX(15px); }
+    100%{ transform:translateY(0) translateX(0); }
+  }
+
+  /* ---------- Screens ---------- */
+  .screen{
+    position:relative;
+    z-index:5;
+    width:100%;
+    max-width:640px;
+    padding:32px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    transition:opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .screen.hidden{
+    opacity:0;
+    transform:scale(0.94);
+    pointer-events:none;
+    position:absolute;
+  }
+
+  /* ---------- Question screen ---------- */
+  #question-screen .emoji{
+    font-size:5.5rem;
+    line-height:1;
+    filter:drop-shadow(0 0 25px rgba(255,93,143,0.35));
+    animation:pulse-emoji 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse-emoji{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.06); }
+  }
+
+  #question-screen h1{
+    margin-top:22px;
+    font-size:clamp(1.9rem, 5vw, 2.7rem);
+    font-weight:600;
+    letter-spacing:0.3px;
+  }
+
+  .btn-row{
+    position:relative;
+    margin-top:44px;
+    display:flex;
+    gap:22px;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    min-height:70px;
+  }
+
+  button{
+    font-family:'Poppins', sans-serif;
+    border:none;
+    cursor:pointer;
+    outline-offset:3px;
+  }
+
+  .btn{
+    padding:16px 40px;
+    font-size:1.05rem;
+    font-weight:600;
+    border-radius:50px;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  #yes-btn{
+    background:linear-gradient(135deg, var(--pink), var(--pink-deep));
+    color:#fff;
+    box-shadow:0 8px 30px rgba(255,46,99,0.45);
+  }
+
+  #yes-btn:hover{
+    transform:translateY(-3px) scale(1.04);
+    box-shadow:0 12px 36px rgba(255,46,99,0.6);
+  }
+
+  #no-btn{
+    background:var(--gray);
+    color:#cfcfd6;
+    box-shadow:0 4px 16px rgba(0,0,0,0.4);
+    position:fixed;
+    transition:top 0.18s ease, left 0.18s ease, transform 0.18s ease;
+  }
+
+  #no-btn:hover{
+    background:var(--gray-light);
+  }
+
+  /* ---------- Success screen ---------- */
+  #success-screen{
+    position:relative;
+  }
+
+  .heart-cloud{
+    position:absolute;
+    inset:-40px;
+    z-index:-1;
+    overflow:hidden;
+    pointer-events:none;
+  }
+
+  .heart-cloud span{
+    position:absolute;
+    color:rgba(255,93,143,0.12);
+    font-size:1.6rem;
+    animation:drift 9s ease-in-out infinite;
+  }
+
+  @keyframes drift{
+    0%,100%{ transform:translateY(0) rotate(0deg); opacity:0.5; }
+    50%{ transform:translateY(-18px) rotate(8deg); opacity:0.9; }
+  }
+
+  #success-screen h1{
+    font-size:clamp(2.4rem, 7vw, 4rem);
+    font-weight:700;
+    letter-spacing:2px;
+    color:var(--pink);
+    text-shadow:
+      0 0 12px rgba(255,93,143,0.8),
+      0 0 34px rgba(255,46,99,0.55),
+      0 0 60px rgba(255,46,99,0.35);
+    animation:glow-pulse 2.6s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse{
+    0%,100%{ text-shadow:0 0 12px rgba(255,93,143,0.8), 0 0 34px rgba(255,46,99,0.55), 0 0 60px rgba(255,46,99,0.35); }
+    50%{ text-shadow:0 0 20px rgba(255,93,143,1), 0 0 46px rgba(255,46,99,0.75), 0 0 80px rgba(255,46,99,0.5); }
+  }
+
+  .script-subtitle{
+    font-family:'Dancing Script', cursive;
+    font-size:clamp(1.6rem, 4vw, 2.2rem);
+    color:var(--pink-soft);
+    margin-top:6px;
+  }
+
+  #open-letter-btn{
+    margin-top:52px;
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    padding:16px 34px;
+    border-radius:50px;
+    background:linear-gradient(135deg, var(--pink), var(--pink-deep));
+    color:#fff;
+    font-size:1rem;
+    font-weight:600;
+    box-shadow:0 8px 30px rgba(255,46,99,0.45);
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  #open-letter-btn:hover{
+    transform:translateY(-3px) scale(1.03);
+    box-shadow:0 12px 36px rgba(255,46,99,0.6);
+  }
+
+  .envelope-icon{
+    font-size:1.2rem;
+  }
+
+  /* ---------- Modal ---------- */
+  #modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(6,3,10,0.72);
+    backdrop-filter:blur(6px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.35s ease;
+    padding:20px;
+  }
+
+  #modal-overlay.visible{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .letter-card{
+    background:linear-gradient(165deg, #1c1023, #120912);
+    border:1px solid rgba(255,93,143,0.25);
+    border-radius:20px;
+    max-width:480px;
+    width:100%;
+    padding:38px 34px 30px;
+    text-align:left;
+    position:relative;
+    box-shadow:0 0 60px rgba(255,46,99,0.25), 0 20px 60px rgba(0,0,0,0.5);
+    transform:scale(0.85) translateY(20px);
+    transition:transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  #modal-overlay.visible .letter-card{
+    transform:scale(1) translateY(0);
+  }
+
+  .letter-card h2{
+    font-size:1.6rem;
+    color:var(--pink);
+    margin-bottom:18px;
+    font-weight:600;
+  }
+
+  .letter-card p.message{
+    font-size:1rem;
+    line-height:1.75;
+    color:#e8e0ea;
+  }
+
+  .signoff{
+    margin-top:26px;
+    text-align:right;
+    font-family:'Dancing Script', cursive;
+    font-size:1.5rem;
+    color:var(--pink-soft);
+  }
+
+  #close-letter-btn{
+    margin-top:28px;
+    width:100%;
+    padding:13px;
+    border-radius:12px;
+    background:var(--gray);
+    color:var(--text);
+    font-weight:500;
+    font-size:0.95rem;
+    transition:background 0.2s ease;
+  }
+
+  #close-letter-btn:hover{
+    background:var(--gray-light);
+  }
+
+  /* ---------- Confetti canvas ---------- */
+  #confetti-canvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:60;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:520px){
+    .btn{ padding:14px 30px; font-size:0.95rem; }
+    .btn-row{ gap:16px; }
+    .letter-card{ padding:28px 22px 24px; }
+  }
+
+  :focus-visible{
+    outline:2px solid var(--pink-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001s !important; animation-iteration-count:1 !important; transition-duration:0.2s !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="bg-canvas"></div>
+
+<!-- Question Screen -->
+<div class="screen" id="question-screen">
+  <div class="emoji">🥺</div>
+  <h1>Do you love me?</h1>
+  <div class="btn-row">
+    <button class="btn" id="yes-btn">Yes</button>
+    <button class="btn" id="no-btn">No</button>
+  </div>
+</div>
+
+<!-- Success Screen -->
+<div class="screen hidden" id="success-screen">
+  <div class="heart-cloud" id="heart-cloud"></div>
+  <h1>I LOVE YOU</h1>
+  <div class="script-subtitle">forever &amp; always</div>
+  <button id="open-letter-btn">
+    <span class="envelope-icon">💌</span>
+    <span>Open Secret Letter</span>
+  </button>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div class="letter-card">
+    <h2>For You ❤️</h2>
+    <p class="message">For You ❤️
+<p>My Dearest Priotoma ❤️,</p>
+        <p>Meeting you in person made my world brighter than ever before. Every smile you shared, every laugh we had together, and every single moment spent by your side is something I will treasure forever. Seeing you face to face made me realize how truly blessed I am to have you in my life.</p>❤️</p>
+    <div class="signoff">Forever Yours, Ony Rifat</div>
+    <button id="close-letter-btn">Close Letter</button>
+  </div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Ambient glow dots ---------- */
+  const bg = document.getElementById('bg-canvas');
+  const dotColors = ['rgba(255,93,143,0.5)', 'rgba(255,46,99,0.4)', 'rgba(255,179,198,0.35)'];
+  const dotCount = window.innerWidth < 600 ? 12 : 22;
+
+  for(let i=0;i<dotCount;i++){
+    const dot = document.createElement('div');
+    dot.className = 'glow-dot';
+    const size = 4 + Math.random()*10;
+    dot.style.width = size+'px';
+    dot.style.height = size+'px';
+    dot.style.top = (Math.random()*100)+'vh';
+    dot.style.left = (Math.random()*100)+'vw';
+    dot.style.background = dotColors[Math.floor(Math.random()*dotColors.length)];
+    dot.style.boxShadow = '0 0 '+(size*2)+'px '+dotColors[Math.floor(Math.random()*dotColors.length)];
+    dot.style.animationDuration = (6 + Math.random()*8)+'s';
+    dot.style.animationDelay = (Math.random()*4)+'s';
+    document.body.appendChild(dot);
+  }
+
+  /* ---------- Floating hearts in success screen ---------- */
+  const heartCloud = document.getElementById('heart-cloud');
+  const heartSymbols = ['❤','💗','✨'];
+  for(let i=0;i<14;i++){
+    const s = document.createElement('span');
+    s.textContent = heartSymbols[Math.floor(Math.random()*heartSymbols.length)];
+    s.style.top = (Math.random()*100)+'%';
+    s.style.left = (Math.random()*100)+'%';
+    s.style.fontSize = (1 + Math.random()*1.6)+'rem';
+    s.style.animationDuration = (6 + Math.random()*6)+'s';
+    s.style.animationDelay = (Math.random()*4)+'s';
+    heartCloud.appendChild(s);
+  }
+
+  /* ---------- "No" button dodge logic ---------- */
+  const noBtn = document.getElementById('no-btn');
+  const yesBtn = document.getElementById('yes-btn');
+  const btnRow = document.querySelector('.btn-row');
+
+  function placeNoButtonInitial(){
+    const rect = btnRow.getBoundingClientRect();
+    noBtn.style.position = 'fixed';
+    noBtn.style.top = rect.top + 'px';
+    noBtn.style.left = (rect.left + rect.width/2 + 20) + 'px';
+  }
+
+  function dodge(){
+    const btnW = noBtn.offsetWidth || 120;
+    const btnH = noBtn.offsetHeight || 56;
+    const margin = 20;
+    const maxX = Math.max(margin, window.innerWidth - btnW - margin);
+    const maxY = Math.max(margin, window.innerHeight - btnH - margin);
+    const newX = margin + Math.random() * (maxX - margin);
+    const newY = margin + Math.random() * (maxY - margin);
+    noBtn.style.left = newX + 'px';
+    noBtn.style.top = newY + 'px';
+  }
+
+  window.addEventListener('load', placeNoButtonInitial);
+  window.addEventListener('resize', () => {
+    // keep it inside viewport if window shrinks
+    const rect = noBtn.getBoundingClientRect();
+    if(rect.right > window.innerWidth || rect.bottom > window.innerHeight){
+      dodge();
+    }
+  });
+
+  noBtn.addEventListener('mouseenter', dodge);
+  noBtn.addEventListener('click', (e) => { e.preventDefault(); dodge(); });
+  noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); dodge(); }, {passive:false});
+
+  /* ---------- Yes button: transition to success screen ---------- */
+  const questionScreen = document.getElementById('question-screen');
+  const successScreen = document.getElementById('success-screen');
+
+  yesBtn.addEventListener('click', () => {
+    questionScreen.classList.add('hidden');
+    successScreen.classList.remove('hidden');
+  });
+
+  /* ---------- Modal open/close ---------- */
+  const openLetterBtn = document.getElementById('open-letter-btn');
+  const closeLetterBtn = document.getElementById('close-letter-btn');
+  const modalOverlay = document.getElementById('modal-overlay');
+
+  openLetterBtn.addEventListener('click', () => {
+    modalOverlay.classList.add('visible');
+    startConfetti();
+  });
+
+  closeLetterBtn.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e) => {
+    if(e.target === modalOverlay) closeModal();
+  });
+
+  function closeModal(){
+    modalOverlay.classList.remove('visible');
+    stopConfetti();
+  }
+
+  /* ---------- Confetti (Canvas) ---------- */
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  let confettiPieces = [];
+  let confettiAnimId = null;
+  let confettiActive = false;
+
+  function resizeCanvas(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  const confettiColors = ['#ff5d8f', '#ff2e63', '#ffb3c6', '#ffffff', '#ffd6e0'];
+
+  function createPiece(){
+    return {
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height * 0.5,
+      w: 6 + Math.random() * 6,
+      h: 10 + Math.random() * 8,
+      color: confettiColors[Math.floor(Math.random()*confettiColors.length)],
+      speedY: 2 + Math.random() * 3,
+      speedX: (Math.random() - 0.5) * 2,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 8,
+      sway: Math.random() * 2 * Math.PI
+    };
+  }
+
+  function startConfetti(){
+    confettiActive = true;
+    const count = window.innerWidth < 600 ? 90 : 160;
+    confettiPieces = Array.from({length: count}, createPiece);
+    if(!confettiAnimId){
+      confettiAnimId = requestAnimationFrame(animateConfetti);
+    }
+    // stop spawning new bursts after 4.5s but let existing pieces fall out
+    clearTimeout(startConfetti._timer);
+    startConfetti._timer = setTimeout(() => { confettiActive = false; }, 4500);
+  }
+
+  function stopConfetti(){
+    confettiActive = false;
+    confettiPieces = [];
+    if(confettiAnimId){
+      cancelAnimationFrame(confettiAnimId);
+      confettiAnimId = null;
+    }
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+  }
+
+  function animateConfetti(){
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+
+    confettiPieces.forEach(p => {
+      p.y += p.speedY;
+      p.sway += 0.05;
+      p.x += p.speedX + Math.sin(p.sway) * 1.2;
+      p.rotation += p.rotationSpeed;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+
+    // remove pieces that fell off screen, keep animating while active or pieces remain
+    confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 30);
+
+    if(confettiActive || confettiPieces.length > 0){
+      confettiAnimId = requestAnimationFrame(animateConfetti);
+    } else {
+      confettiAnimId = null;
+    }
+  }
+
+})();
+</script>
+</body>
+</html>
